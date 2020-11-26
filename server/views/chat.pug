@@ -5,15 +5,17 @@ block content
     .chat__sidebar
       h3 Active Users
       #users 
+      //button#test Holla
     .chat__main
-      ol#messages.chat__messages
-      .chat__footer
+      canvas( id="draw", resize="true", keepalive="true" )
+      //ol#messages.chat__messages
+      //.chat__footer
         form#message-form
           input(type="text" id="message" name="message", placeholder="Message" autofocus autocomplete="off")
           button(type="submit") Submit
         button#send-location Send location
 
-    script#message-template(type="text/template")
+    //script#message-template(type="text/template")
       li.message
         .message__title
           h4 {{ from }}
@@ -21,14 +23,16 @@ block content
         .message__body
           p {{ text }} 
     
-    script#location-message-template(type="text/template")
+    //script#location-message-template(type="text/template")
       li.message
         .message__title
           h4 {{ from }}
           span {{ createdAt }}
         .message__body
-          p 
+          p
             a( href="{{ text }}", target="_blank") My Current Location
 
 block append scripts
-  script(src="/vendors/js/code.js")
+  script(src="/vendors/js/paper.js")
+  //script(src="/vendors/js/code.js")
+  script( type="text/paperscript", src="/vendors/js/code.js", canvas="draw")

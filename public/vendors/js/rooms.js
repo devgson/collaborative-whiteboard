@@ -1,7 +1,7 @@
 var socket = io();
 
 socket.on('connect', function(){
-  socket.on('activeRooms', function(rooms){
+  /*socket.on('activeRooms', function(rooms){
     console.log('here');
     var template = document.querySelector('#room').firstElementChild;
     var html = Mustache.render(
@@ -13,5 +13,5 @@ socket.on('connect', function(){
      </datalist>`, rooms);
     
     template.insertAdjacentHTML('afterend',html);
-  });
+  });*/
 });

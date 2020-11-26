@@ -4,6 +4,7 @@ var express = require('express');
 var socketIO = require('socket.io');
 
 var { User } = require('./utils/users.js');
+var { Drawings } = require('./utils/state.js');
 var { generateMessage, generateLocationMessage } = require('./utils/generateMessage');
 var { realString } = require('./utils/realString');
 
@@ -13,6 +14,7 @@ var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
 var users = new User();
+var drawings = new Drawings();
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname,'/views'));
@@ -45,9 +47,8 @@ io.on('connection', (socket) => {
     users.addUser(socket.id, params.name, params.room);
 
     io.to(params.room).emit('updateUserList', users.getUserList(params.room));
-    socket.emit('newMessage',generateMessage('Admin',`Welcome to the chat App`) );
     socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin',`${params.name} Joined`) );
-    callback();    
+    callback();
   });
 
   socket.on('createMessage', ( message, callback ) => {
@@ -55,6 +56,25 @@ io.on('connection', (socket) => {
     io.to(user.room).emit('newMessage',generateMessage(user.name, message.text) );
     callback()
   });
+
+  socket.on('startPath', (data, sessionId, id) => {
+    drawings.addStartDrawing(data, id);
+    socket.broadcast.emit('startPath', data, sessionId, id);
+  })
+
+  socket.on('continuePath', (data, sessionId, id) => {
+    drawings.addMiddleDrawing(data, id)
+    socket.broadcast.emit('continuePath', data, sessionId, id);
+  })
+
+  socket.on('endPath', (data, sessionId, id) => {
+    drawings.addEndDrawing(data, id)
+    socket.broadcast.emit('endPath', data, sessionId, id);
+  })
+
+  socket.on('getDrawings', () => {
+    socket.emit('getDrawings', drawings.drawings);
+  })
 
   socket.on('createLocationMessage', coords => {
     var user = users.getUser(socket.id);
@@ -65,7 +85,7 @@ io.on('connection', (socket) => {
     var user = users.removeUser(socket.id);
     if( user ){
       io.to(user.room).emit('updateUserList', users.getUserList(user.room));
-      io.to(user.room).emit('newMessage', generateMessage('Admin',`${user.name} has left the room`));
+      //io.to(user.room).emit('newMessage', generateMessage('Admin',`${user.name} has left the room`));
     }
   });
 

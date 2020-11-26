@@ -1,43 +1,28 @@
-var socket = io();
-var sessionId = socket.id;
-var id;
-paths = {};
+// The faster the user moves their mouse
+// the larger the circle will be
+// We dont want it to be larger/smaller than this
 tool.maxDistance = 2;
 tool.maxDistance = 80;
 
-socket.on('connect', function(){
-  var params = $.deparam(window.location.search);
+// Each user has a unique session ID
+// We'll use this to keep track of paths
+var sessionId = socket.id;
 
-  socket.emit('join', params, function (err){
-    if(err){
-      alert(err);
-      window.location.href = "/";
-    }
-    socket.emit('getDrawings');
-  });
-
-});
-
-socket.on('updateUserList', function(users){
-  var ol = $('<ol></ol>');
-  users.forEach(function(user){
-    ol.append($('<li></li>').text(user));
-  });
-  $('#users').html(ol);
-});
-
-socket.on('disconnect', function(){
-  console.log('Disconnected from server');
-});
-
+// Returns an object specifying a semi-random color
 function randomColor() {
+  
   return {
     hue: Math.random() * 360,
     saturation: 0.8,
     brightness: 0.8,
     alpha: 0.5
   };
+
 }
+
+// An object to keep track of each users paths
+// We'll use session ID's as keys
+paths = {};
 
 const object = {
   start: {
@@ -59,15 +44,20 @@ const object = {
   end: { x: 463.015625, y: 700 }
 }
 
+var id;
 function makeId(){
   return Math.random().toString(36).substring(7);
 }
 
 var test = $('#test');
 test.on("click", function(e) {
-  
+  socket.emit('getDrawings')
 })
+// -----------
+// User Events
+// -----------
 
+// The user started a path
 function onMouseDown(event) {
   id = makeId();
   // Create the new path
@@ -113,6 +103,11 @@ function onMouseUp(event) {
 
 }
 
+// -----------------
+// On
+// Draw other users paths
+// -----------------
+
 socket.on('getDrawings', function(data) {
   function draw(object){
     paths[sessionId] = new Path();
@@ -128,6 +123,7 @@ socket.on('getDrawings', function(data) {
     paths[sessionId].smooth();
     view.draw();
   }
+  
   data.forEach(function(value){
     for(var property in value){
       var drawing = value[property]
