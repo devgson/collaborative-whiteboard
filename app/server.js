@@ -18,7 +18,7 @@ var drawings = new Drawings();
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname,'/views'));
-app.use(express.static(path.join(__dirname,'../public')));
+app.use(express.static(path.join(__dirname,'./public')));
  
 app.get('/', function(req, res, next){
   res.render('index');
