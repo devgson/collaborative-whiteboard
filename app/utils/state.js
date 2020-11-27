@@ -29,6 +29,4 @@ class Drawings {
   
   }
   
-  //var user = new User();
-  
   module.exports = { Drawings };

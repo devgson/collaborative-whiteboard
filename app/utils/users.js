@@ -1,12 +1,46 @@
+var moment = require('moment');
+
 class User {
   constructor () {
     this.users =[];
   }
 
-  addUser (id, name, room) {
-    var user = { id ,name, room };
+  addUser (id, name, room, isAdmin) {
+    var user = { 
+      id,
+      name,
+      room,
+      joinedAt: moment.now(),
+      isAdmin,
+      canEdit: isAdmin
+    };
     this.users.push(user);
     return user;
+  }
+
+  selectNewAdmin() {
+    const sortedUsers = this.users.sort((a, b) => moment(a.joinedAt).valueOf() - moment(b.joinedAt).valueOf());
+    this.setAsAdmin(sortedUsers[0]);
+  }
+
+  setAsAdmin(user) {
+    this.users = this.users.map(value => {
+      if(value.id === user.id){
+        value.isAdmin = true;
+        value.canEdit = true;
+      }
+      return value;
+    })
+  }
+
+  allowEdit(id){
+    var user = this.getUser(id);
+    this.users = this.users.map(value => {
+      if(value.id === user.id){
+        value.canEdit = true;
+      }
+      return value;
+    })
   }
 
   removeUser (id) {
@@ -22,25 +56,13 @@ class User {
   }
 
   getUsername (name, room) {
-    var user =  this.getUserList(room);
-    return user.filter( user => user === name ).length > 0;
-  }
-
-  getActiveRooms () {
-    var newObj = [];
-    var user = this.users.map( user => {
-      if( newObj.includes(user.room) ) return;
-      return newObj.push(user.room); 
-    });
-    return newObj;
+    var users =  this.getUserList(room);
+    return users.filter(user => user.name === name ).length > 0;
   }
 
   getUserList (room) {
-    var users = this.users.filter( user => user.room === room );
-    return users.map( user => user.name );
+    return this.users.filter( user => user.room === room );
   }
 }
-
-//var user = new User();
 
 module.exports = { User };

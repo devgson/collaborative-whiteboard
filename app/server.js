@@ -5,8 +5,6 @@ var socketIO = require('socket.io');
 
 var { User } = require('./utils/users.js');
 var { Drawings } = require('./utils/state.js');
-var { generateMessage, generateLocationMessage } = require('./utils/generateMessage');
-var { realString } = require('./utils/realString');
 
 var port = process.env.PORT || 3000;
 var app = express();
@@ -28,33 +26,32 @@ app.get('/chat', function(req, res, next){
   res.render('chat');
 });
 
+var realString = str => {
+  return typeof str === 'string' && str.trim().length > 0;
+}
 
 io.on('connection', (socket) => {
-  socket.emit('activeRooms',users.getActiveRooms());
-
+  
   socket.on('join', ( params, callback ) => {
     params.room = params.room.toLowerCase();
     if( !realString(params.name) || !realString(params.room) ){
       return callback('Input should be valid');
     }
-    //console.log(users.getUsername(params.name, params.room) );
     if( users.getUsername(params.name, params.room) ){
       return callback('Username already Exists, Pick another ');
     }
     
     socket.join(params.room);
     users.removeUser(socket.id);
-    users.addUser(socket.id, params.name, params.room);
-
+    var usersExists = users.users.length
+    if(usersExists){
+      users.addUser(socket.id, params.name, params.room, false);
+    } else {
+      users.addUser(socket.id, params.name, params.room, true);
+    }
+    
     io.to(params.room).emit('updateUserList', users.getUserList(params.room));
-    socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin',`${params.name} Joined`) );
     callback();
-  });
-
-  socket.on('createMessage', ( message, callback ) => {
-    var user = users.getUser(socket.id);
-    io.to(user.room).emit('newMessage',generateMessage(user.name, message.text) );
-    callback()
   });
 
   socket.on('startPath', (data, sessionId, id) => {
@@ -76,17 +73,16 @@ io.on('connection', (socket) => {
     socket.emit('getDrawings', drawings.drawings);
   })
 
-  socket.on('createLocationMessage', coords => {
-    var user = users.getUser(socket.id);
-    io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude) );
-  });
+  socket.on('allowUserEdit', (id) => {
+    users.allowEdit(id);
+    io.to('main').emit('updateUserList', users.users);
+  })
 
   socket.on('disconnect', () => {
     var user = users.removeUser(socket.id);
-    if( user ){
-      io.to(user.room).emit('updateUserList', users.getUserList(user.room));
-      //io.to(user.room).emit('newMessage', generateMessage('Admin',`${user.name} has left the room`));
-    }
+    if(!user) return;
+    if(user.isAdmin) users.selectNewAdmin()
+    io.to(user.room).emit('updateUserList', users.users);
   });
 
 });

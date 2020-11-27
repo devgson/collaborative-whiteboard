@@ -20,8 +20,23 @@ socket.on('connect', function(){
 
 socket.on('updateUserList', function(users){
   var ol = $('<ol></ol>');
-  users.forEach(function(user){
-    ol.append($('<li></li>').text(user));
+  var admin = users.filter(function(user){ return user.isAdmin })[0];
+  var nonAdmins = users.filter(function(user){ return !user.isAdmin });
+
+  var li = $('<li></li>').text(admin.name);
+  li.append($('<small class="bg-success float-right p-1 rounded">Admin</small>'));
+  ol.append(li);
+  nonAdmins.forEach(function(user){
+    var li = $('<li></li>').text(user.name);
+    if(admin.id === socket.id && !user.canEdit){
+      li.append($("<button data-id="+ user.id +" class='btn-sm btn-danger float-right p-1 permit'>Allow draw</button>"));
+      $(li).on('click', '.permit', function(event){
+        var target = $(event.target)
+        var id = target.data('id');
+        socket.emit('allowUserEdit', id);
+      });
+    }
+    ol.append(li);
   });
   $('#users').html(ol);
 });
@@ -29,6 +44,8 @@ socket.on('updateUserList', function(users){
 socket.on('disconnect', function(){
   console.log('Disconnected from server');
 });
+
+
 
 function randomColor() {
   return {
@@ -62,11 +79,6 @@ const object = {
 function makeId(){
   return Math.random().toString(36).substring(7);
 }
-
-var test = $('#test');
-test.on("click", function(e) {
-  
-})
 
 function onMouseDown(event) {
   id = makeId();
@@ -146,7 +158,6 @@ socket.on( 'startPath', function( data, sessionId ) {
   
 })
 
-
 socket.on( 'continuePath', function( data, sessionId ) {
 
   var path = paths[sessionId];
@@ -155,7 +166,6 @@ socket.on( 'continuePath', function( data, sessionId ) {
   view.draw();
   
 })
-
 
 socket.on( 'endPath', function( data, sessionId ) {
 
