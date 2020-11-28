@@ -19,11 +19,18 @@ socket.on('connect', function(){
 });
 
 socket.on('updateUserList', function(users){
-  var ol = $('<ol></ol>');
+  var ol = $("<ol class='list'></ol>");
   var admin = users.filter(function(user){ return user.isAdmin })[0];
   var nonAdmins = users.filter(function(user){ return !user.isAdmin });
+  var currentUser = users.filter(function(user){ return user.id === socket.id })[0];
 
   var li = $('<li></li>').text(admin.name);
+  if(currentUser.id === admin.id){
+    ol.append($("<button class='btn-primary save'>Save Whiteboard</button>"));
+    $(ol).on('click', '.save', function(event){
+      socket.emit('startSave');
+    })
+  }
   li.append($('<small class="bg-success float-right p-1 rounded">Admin</small>'));
   ol.append(li);
   nonAdmins.forEach(function(user){
@@ -38,14 +45,43 @@ socket.on('updateUserList', function(users){
     }
     ol.append(li);
   });
+
+  if(currentUser.canEdit){
+    $('#draw').css({pointerEvents: "auto"});
+  }
+
   $('#users').html(ol);
 });
+
+socket.on('startSave', function(users) {
+  var currentUser = users.filter(function(user){ return user.id === socket.id })[0];
+  var ol = $('.list')
+  var div = $('<div></div>')
+  div.append($(
+    "<button class='vote'>yes</button>" +
+    "<button class='vote'>no</button>"
+  ))
+  ol.append(div)
+  $(div).on('click', '.vote', function(event){
+    var target = $(event.target)
+    var text = target.text();
+    socket.emit('compileVote', currentUser.id, text);
+    $(event.target).parent().remove();
+  })
+})
+
+socket.on('endSave', function(result) {
+  if(result === true){
+    alert('Voting completed!, majority of users voted to save whiteboard')
+  }
+  if(result === false){
+    alert('Voting completed!, majority of users voted not to save whiteboard')
+  }
+})
 
 socket.on('disconnect', function(){
   console.log('Disconnected from server');
 });
-
-
 
 function randomColor() {
   return {

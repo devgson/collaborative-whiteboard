@@ -78,6 +78,27 @@ io.on('connection', (socket) => {
     io.to('main').emit('updateUserList', users.users);
   })
 
+  socket.on('startSave', () => {
+    io.to('main').emit('startSave', users.users)
+  })
+
+  socket.on('compileVote', (id, answer) => {
+    users.addVote(answer);
+    console.log(users.compileVotes);
+    if(users.compileVotes.votesSoFar === users.users.length){
+      if(users.compileVotes.yesVotes >= users.compileVotes.noVotes){
+        // save and emit an event reseting the save stuff and informing of decision
+        users.resetVotes();
+        io.to('main').emit('endSave', true);
+      } else {
+        users.resetVotes()
+        io.to('main').emit('endSave', false);
+        // save and emit an event reseting the save stuff and informing of decision
+
+      }
+    }
+  })
+
   socket.on('disconnect', () => {
     var user = users.removeUser(socket.id);
     if(!user) return;

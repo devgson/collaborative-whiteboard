@@ -188,3 +188,7 @@ button:disabled {
     margin-right: 0
   }
 }
+
+#draw {
+  pointer-events: none;
+}

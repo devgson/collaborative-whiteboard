@@ -2,6 +2,11 @@ var moment = require('moment');
 
 class User {
   constructor () {
+    this.compileVotes = {
+      yesVotes: 0,
+      noVotes: 0,
+      votesSoFar: 0
+    }
     this.users =[];
   }
 
@@ -41,6 +46,25 @@ class User {
       }
       return value;
     })
+  }
+
+  addVote(answer){
+    if(answer === 'yes'){
+      this.compileVotes.yesVotes = this.compileVotes.yesVotes + 1
+      this.compileVotes.votesSoFar = this.compileVotes.votesSoFar + 1
+    }
+    if(answer === 'no'){
+      this.compileVotes.noVotes = this.compileVotes.noVotes + 1
+      this.compileVotes.votesSoFar = this.compileVotes.votesSoFar + 1
+    }
+  }
+
+  resetVotes(){
+    this.compileVotes = {
+      yesVotes: 0,
+      noVotes: 0,
+      votesSoFar: 0
+    }
   }
 
   removeUser (id) {
