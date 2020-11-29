@@ -1,3 +1,5 @@
+const Whiteboard = require("./whiteboardModel");
+
 class Drawings {
     constructor () {
       this.drawings = [];
@@ -25,6 +27,30 @@ class Drawings {
           }
         }
       })
+    }
+
+    async saveWhiteboard(){
+      try {
+        return await new Whiteboard({ drawings: this.drawings }).save();
+      } catch (error) {
+        return error;
+      }
+    }
+
+    async getSavedWhiteboards(){
+      try {
+        return await Whiteboard.find();
+      } catch (error) {
+        return error;
+      }
+    }
+
+    async getWhiteboard(id){
+      try {
+        return await Whiteboard.findById(id);
+      } catch (error) {
+        return error;
+      }
     }
   
   }

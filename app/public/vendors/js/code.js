@@ -18,7 +18,7 @@ socket.on('connect', function(){
 
 });
 
-socket.on('updateUserList', function(users){
+socket.on('updateUserList', function(users, savedDrawings){
   var ol = $("<ol class='list'></ol>");
   var admin = users.filter(function(user){ return user.isAdmin })[0];
   var nonAdmins = users.filter(function(user){ return !user.isAdmin });
@@ -26,9 +26,13 @@ socket.on('updateUserList', function(users){
 
   var li = $('<li></li>').text(admin.name);
   if(currentUser.id === admin.id){
-    ol.append($("<button class='btn-primary save'>Save Whiteboard</button>"));
+    ol.append($("<div class='text-center'><button class='btn-warning rounded save'>Save Whiteboard</button></div>"));
     $(ol).on('click', '.save', function(event){
+      $(event.target).prop('disabled', true);
+      $(event.target).css('background', '#F5F5F5');
+      $(event.target).css('color', '#C3C3C3');
       socket.emit('startSave');
+      alert('Vote collection has started')
     })
   }
   li.append($('<small class="bg-success float-right p-1 rounded">Admin</small>'));
@@ -46,6 +50,24 @@ socket.on('updateUserList', function(users){
     ol.append(li);
   });
 
+  if(currentUser.id === admin.id){
+    var div = $("<div class='text-center'><p>Saved Whiteboards</p></div>");
+    var ul = $("<ul></ul>")
+    savedDrawings.forEach(function(drawing){
+      var li = $("<li></li>");
+      var a = $("<a href='#' class='boards' data-id=" + drawing._id + "></a>").text(drawing._id);
+      $(a).on('click', function(event){
+        var target = $(event.target)
+        var id = target.data('id');
+        socket.emit('loadWhiteboard', id);
+      });
+      li.append(a);
+      ul.append(li);
+    })
+    div.append(ul);
+    ol.append(div);
+  }
+
   if(currentUser.canEdit){
     $('#draw').css({pointerEvents: "auto"});
   }
@@ -56,10 +78,10 @@ socket.on('updateUserList', function(users){
 socket.on('startSave', function(users) {
   var currentUser = users.filter(function(user){ return user.id === socket.id })[0];
   var ol = $('.list')
-  var div = $('<div></div>')
+  var div = $("<div class='mt-4 text-center'><p class='mb-0 text-white'>Should the whiteboard be saved?</p></div>")
   div.append($(
-    "<button class='vote'>yes</button>" +
-    "<button class='vote'>no</button>"
+    "<button class='btn-dark m-1 rounded vote'>yes</button>" +
+    "<button class='btn-dark m-1 rounded vote'>no</button>"
   ))
   ol.append(div)
   $(div).on('click', '.vote', function(event){
@@ -76,6 +98,11 @@ socket.on('endSave', function(result) {
   }
   if(result === false){
     alert('Voting completed!, majority of users voted not to save whiteboard')
+  }
+  var saveButton = $('.save')
+  if(saveButton){
+    saveButton.prop('disabled', false);
+    saveButton.css({ 'background': '', 'color': '' });
   }
 })
 
@@ -162,6 +189,7 @@ function onMouseUp(event) {
 }
 
 socket.on('getDrawings', function(data) {
+  project.activeLayer.removeChildren();
   function draw(object){
     paths[sessionId] = new Path();
     paths[sessionId].fillColor = object.start.color;

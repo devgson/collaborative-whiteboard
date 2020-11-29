@@ -1,10 +1,24 @@
 var path = require('path');
 var http = require('http');
+var mongoose = require('mongoose');
 var express = require('express');
 var socketIO = require('socket.io');
 
 var { User } = require('./utils/users.js');
 var { Drawings } = require('./utils/state.js');
+
+mongoose.connect('mongodb+srv://admin:admin@cluster0.xvhnn.mongodb.net/icc?retryWrites=true&w=majority', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
+  useCreateIndex: true
+})
+  .then(result => {
+    console.log('Database connection established')
+  })
+  .catch(err => {
+    console.log(err)
+  })
 
 var port = process.env.PORT || 3000;
 var app = express();
@@ -32,7 +46,7 @@ var realString = str => {
 
 io.on('connection', (socket) => {
   
-  socket.on('join', ( params, callback ) => {
+  socket.on('join', async ( params, callback ) => {
     params.room = params.room.toLowerCase();
     if( !realString(params.name) || !realString(params.room) ){
       return callback('Input should be valid');
@@ -50,7 +64,8 @@ io.on('connection', (socket) => {
       users.addUser(socket.id, params.name, params.room, true);
     }
     
-    io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+    const savedDrawings = await drawings.getSavedWhiteboards();
+    io.to(params.room).emit('updateUserList', users.getUserList(params.room), savedDrawings);
     callback();
   });
 
@@ -73,9 +88,10 @@ io.on('connection', (socket) => {
     socket.emit('getDrawings', drawings.drawings);
   })
 
-  socket.on('allowUserEdit', (id) => {
+  socket.on('allowUserEdit', async (id) => {
+    const savedDrawings = await drawings.getSavedWhiteboards();
     users.allowEdit(id);
-    io.to('main').emit('updateUserList', users.users);
+    io.to('main').emit('updateUserList', users.users, savedDrawings);
   })
 
   socket.on('startSave', () => {
@@ -84,26 +100,41 @@ io.on('connection', (socket) => {
 
   socket.on('compileVote', (id, answer) => {
     users.addVote(answer);
-    console.log(users.compileVotes);
     if(users.compileVotes.votesSoFar === users.users.length){
       if(users.compileVotes.yesVotes >= users.compileVotes.noVotes){
-        // save and emit an event reseting the save stuff and informing of decision
-        users.resetVotes();
-        io.to('main').emit('endSave', true);
+        drawings.saveWhiteboard()
+          .then(async () => {
+            const savedDrawings = await drawings.getSavedWhiteboards();
+            users.resetVotes();
+            io.to('main').emit('endSave', true);
+            io.to('main').emit('updateUserList', users.users, savedDrawings);
+          })
+          .catch((err) => console.log(err));
       } else {
         users.resetVotes()
         io.to('main').emit('endSave', false);
-        // save and emit an event reseting the save stuff and informing of decision
-
       }
+    }
+  });
+
+  socket.on('loadWhiteboard', async (id) => {
+    try {
+      const loadedDrawing = await drawings.getWhiteboard(id);
+      if(loadedDrawing){
+        drawings.drawings = loadedDrawing.drawings;
+        io.to('main').emit('getDrawings', loadedDrawing.drawings);
+      }
+    } catch (error) {
+      
     }
   })
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     var user = users.removeUser(socket.id);
     if(!user) return;
     if(user.isAdmin) users.selectNewAdmin()
-    io.to(user.room).emit('updateUserList', users.users);
+    const savedDrawings = await drawings.getSavedWhiteboards();
+    io.to(user.room).emit('updateUserList', users.users, savedDrawings);
   });
 
 });
