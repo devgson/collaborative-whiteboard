@@ -1,7 +1,7 @@
 {
-  "name": "chat-app",
+  "name": "collaborative-whiteboard",
   "version": "0.0.1",
-  "description": "Real time node application",
+  "description": "Real time collaborative whiteboard application",
   "main": "server.js",
   "dependencies": {
     "express": "^4.16.2",
@@ -11,8 +11,6 @@
     "socket.io": "^2.0.4"
   },
   "devDependencies": {
-    "expect": "^1.20.2",
-    "mocha": "^3.0.0"
   },
   "scripts": {
     "start": "node app/server.js",
@@ -21,12 +19,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gson007/chat-app.git"
+    "url": "git+https://github.com/devgson/collaborative-whiteboard.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gson007/chat-app/issues"
+    "url": "https://github.com/devgson/collaborative-whiteboard/issues"
   },
-  "homepage": "https://github.com/gson007/chat-app#readme"
+  "homepage": "https://github.com/devgson/collaborative-whiteboard#readme"
 }

@@ -36,8 +36,8 @@ app.get('/', function(req, res, next){
   res.render('index');
 });
 
-app.get('/chat', function(req, res, next){
-  res.render('chat');
+app.get('/whiteboard', function(req, res, next){
+  res.render('whiteboard');
 });
 
 var realString = str => {
