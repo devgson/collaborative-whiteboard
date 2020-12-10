@@ -12,6 +12,8 @@ COPY package*.json ./
 
 RUN npm install
 
+RUN npm install -g pm2
+
 # Copy source files from host computer to the container
 COPY . .
 
@@ -19,4 +21,4 @@ COPY . .
 EXPOSE 3000
 
 # Run the app
-CMD [ "node", "app/server.js" ]
+CMD [ "npm", "start" ]

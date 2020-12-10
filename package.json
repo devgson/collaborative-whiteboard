@@ -10,10 +10,9 @@
     "pug": "^2.0.0-rc.4",
     "socket.io": "^2.0.4"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "scripts": {
-    "start": "node app/server.js",
+    "start": "pm2 start app/server.js",
     "test": "mocha app/**/*.test.js",
     "test-watch": "nodemon --exec \"npm test\" "
   },

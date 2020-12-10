@@ -2,15 +2,22 @@ extends layout
 
 block append css
   link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous")
+  link(rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css")
 
 block content
   body.chat
     .chat__sidebar
-      h3 Active Users
-      #users 
+      h3.text-center Active Users
+      #users
+      div(class="d-none no-close" id="dialog-confirm" title="Save Whiteboard?")
+        p.text-center.mb-0.p-2
+          span( class="ui-icon ui-icon-alert mr-2")
+          span( class="text-success") Should the whiteboard be saved?
+
     .chat__main
       canvas( id="draw", resize="true", keepalive="true" )
 
 block append scripts
-  script(src="/vendors/js/paper.js")
-  script( type="text/paperscript", src="/vendors/js/code.js", canvas="draw")
+  script(src="https://code.jquery.com/ui/1.12.0/jquery-ui.js", integrity="sha256-0YPKAwZP7Mp3ALMRVB2i8GXeEndvCq3eSl/WsAl1Ryk=", crossorigin="anonymous")
+  script(src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.22/paper.js" integrity="sha512-78iNwAG6wHL73U8nFGZDqGlqX1pW8GxTF6bFw/wN1NqPrXKIhIQSMzc3YUw1UWY/jk25CM10G6/R1A5vIyQwuQ==" crossorigin="anonymous")
+  script(type="text/paperscript", src="/vendors/js/code.js", canvas="draw")

@@ -5,6 +5,10 @@ button:hover {
   padding: 10px
 }
 
+button.ui-dialog-titlebar-close {
+  display: none;
+}
+
 .chat__messages,
 .chat__sidebar ul {
   list-style-type: none

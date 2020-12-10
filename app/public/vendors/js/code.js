@@ -23,8 +23,12 @@ socket.on('updateUserList', function(users, savedDrawings){
   var admin = users.filter(function(user){ return user.isAdmin })[0];
   var nonAdmins = users.filter(function(user){ return !user.isAdmin });
   var currentUser = users.filter(function(user){ return user.id === socket.id })[0];
-
-  var li = $('<li></li>').text(admin.name);
+  var li;
+  if(admin.id === currentUser.id){
+    li = $('<li></li>').text(admin.name + '(You)');
+  } else {
+    li = $('<li></li>').text(admin.name);
+  }
   if(currentUser.id === admin.id){
     ol.append($("<div class='text-center'><button class='btn-warning rounded save'>Save Whiteboard</button></div>"));
     $(ol).on('click', '.save', function(event){
@@ -38,7 +42,12 @@ socket.on('updateUserList', function(users, savedDrawings){
   li.append($('<small class="bg-success float-right p-1 rounded">Admin</small>'));
   ol.append(li);
   nonAdmins.forEach(function(user){
-    var li = $('<li></li>').text(user.name);
+    var li;
+    if(user.id === socket.id){
+      li = $('<li></li>').text(user.name + '(You)');
+    }else {
+      li = $('<li></li>').text(user.name);
+    }
     if(admin.id === socket.id && !user.canEdit){
       li.append($("<button data-id="+ user.id +" class='btn-sm btn-danger float-right p-1 permit'>Allow draw</button>"));
       $(li).on('click', '.permit', function(event){
@@ -51,7 +60,7 @@ socket.on('updateUserList', function(users, savedDrawings){
   });
 
   if(currentUser.id === admin.id){
-    var div = $("<div class='text-center'><p>Saved Whiteboards</p></div>");
+    var div = $("<div class=''><p class='text-center mb-0 mt-5 text-uppercase text-white'>Saved Whiteboards</p><p class='text-center text-info'>Click below to load a whiteboard</p></div>");
     var ul = $("<ul></ul>")
     savedDrawings.forEach(function(drawing){
       var li = $("<li></li>");
@@ -77,19 +86,26 @@ socket.on('updateUserList', function(users, savedDrawings){
 
 socket.on('startSave', function(users) {
   var currentUser = users.filter(function(user){ return user.id === socket.id })[0];
-  var ol = $('.list')
-  var div = $("<div class='mt-4 text-center'><p class='mb-0 text-white'>Should the whiteboard be saved?</p></div>")
-  div.append($(
-    "<button class='btn-dark m-1 rounded vote'>yes</button>" +
-    "<button class='btn-dark m-1 rounded vote'>no</button>"
-  ))
-  ol.append(div)
-  $(div).on('click', '.vote', function(event){
-    var target = $(event.target)
-    var text = target.text();
-    socket.emit('compileVote', currentUser.id, text);
-    $(event.target).parent().remove();
-  })
+  $("#dialog-confirm").toggleClass("d-none")
+  $("#dialog-confirm").dialog({
+    dialogClass: "no-close",
+    resizable: false,
+    height: "auto",
+    width: 400,
+    modal: true,
+    buttons: {
+      "Yes": function() {
+        $(this).dialog( "close" );
+        socket.emit('compileVote', currentUser.id, "yes");
+        $("#dialog-confirm").toggleClass("d-none")
+      },
+      "No": function() {
+        $(this).dialog( "close" );
+        socket.emit('compileVote', currentUser.id, "no");
+        $("#dialog-confirm").toggleClass("d-none")
+      }
+    }
+  });
 })
 
 socket.on('endSave', function(result) {
@@ -117,26 +133,6 @@ function randomColor() {
     brightness: 0.8,
     alpha: 0.5
   };
-}
-
-const object = {
-  start: {
-    point: { x: 454.015625, y: 685 },
-    color: {
-      hue: 287.18221728616436,
-      saturation: 0.8,
-      brightness: 0.8,
-      alpha: 0.5
-    }
-  },
-  middle: [
-    { top: { x: 452.015625, y: 688 }, bottom: { x: 457.015625, y: 687 } },
-    { top: { x: 454.015625, y: 696 }, bottom: { x: 461.015625, y: 691 } },
-    { top: { x: 460.515625, y: 697.5 }, bottom: { x: 460.515625, y: 696.5 } },
-    { top: { x: 460.515625, y: 698.5 }, bottom: { x: 462.515625, y: 697.5 } },
-    { top: { x: 462.015625, y: 700 }, bottom: { x: 463.015625, y: 699 } }
-  ],
-  end: { x: 463.015625, y: 700 }
 }
 
 function makeId(){
