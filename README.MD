@@ -1,0 +1,2 @@
+- Run `npm start` to start the server
+- Go to `localhost:3000`

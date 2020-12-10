@@ -21,4 +21,4 @@ COPY . .
 EXPOSE 3000
 
 # Run the app
-CMD [ "npm", "start" ]
+CMD [ "pm2-runtime", "app/server.js" ]
