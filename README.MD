@@ -1,2 +1,3 @@
+- Run `npm install` and `npm install -g pm2`
 - Run `npm start` to start the server
 - Go to `localhost:3000`
